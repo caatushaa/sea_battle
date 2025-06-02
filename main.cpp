@@ -255,15 +255,7 @@ int main() {
                                 targetState.lastHitX = x;
                                 targetState.lastHitY = y;
                                 targetState.direction = d;
-                                
-                                // Удаление противоположного направления
-                                int oppDir = (d + 2) % 4;
-                                auto it = find(targetState.directionsToTry.begin(),
-                                              targetState.directionsToTry.end(), oppDir);
-                                if (it != targetState.directionsToTry.end()) {
-                                    targetState.directionsToTry.erase(it);
-                                }
-                                
+                                                         
                                 if (resultShoting == 2) { // Убийство
                                     targetingMode = false;
                                     cout << "Компьютер убил ваш корабль!\n";
