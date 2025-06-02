@@ -235,25 +235,17 @@ void set_rand_ships(int map[N][N], int size_ship, int ship_id) {
 }
 
 bool ship_in_map(int x, int y, int dir, int size_ship) {
-    bool in_map = 1;
+    bool in_map = true;
     for (int i = 0; i < size_ship; i++){
         if (x < 0 || y < 0 || x >= N || y >= N){
-            in_map = 0; // Корабль выходит за границы
+            in_map = false; // Корабль выходит за границы
             break;
         }
         switch(dir){
-            case 0:
-                x++; //Вправо
-                break;
-            case 1:
-                y++; //Вниз
-                break;
-            case 2:
-                x--; //Влево
-                break;
-            case 3:
-                y--; //Вверх
-                break;
+            case 0: x++; break; // Вправо
+            case 1: y++; break; // Вниз
+            case 2: x--; break; // Влево
+            case 3: y--; break; // Вверх
         }
     }
     return in_map;
@@ -284,47 +276,49 @@ void set_manually_ships(int map[N][N], int size_ship, int ship_id) {
         clearScreen();
         
         // "Ставим" корабль на временную карту для отображения
-        int curr_x = x, curr_y = y;
-        bool can_place = true;
+        bool can_place = ship_in_map(x, y, dir, size_ship);
         
-        // Проверяем, можно ли поставить корабль
-        for (int i = 0; i < size_ship; i++) {
-            if (curr_x < 0 || curr_x >= N || curr_y < 0 || curr_y >= N) {
-                can_place = false;
-                break;
-            }
-            
-            // Проверяем соседние клетки
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dy = -1; dy <= 1; dy++) {
-                    int nx = curr_x + dx;
-                    int ny = curr_y + dy;
-                    if (nx >= 0 && nx < N && ny >= 0 && ny < N) {
-                        if (map[nx][ny] > 0) {
-                            can_place = false;
-                            break;
+        // Если корабль в пределах карты, проверяем соседние клетки
+        if (can_place) {
+            int curr_x = x, curr_y = y;
+            for (int i = 0; i < size_ship; i++) {
+                // Проверяем соседние клетки (3x3 область вокруг каждой клетки корабля)
+                for (int dx = -1; dx <= 1; dx++) {
+                    for (int dy = -1; dy <= 1; dy++) {
+                        int nx = curr_x + dx;
+                        int ny = curr_y + dy;
+                        if (nx >= 0 && nx < N && ny >= 0 && ny < N) {
+                            if (map[nx][ny] > 0) {
+                                can_place = false;
+                                break;
+                            }
                         }
                     }
+                    if (!can_place) break;
                 }
                 if (!can_place) break;
+                
+                // Переходим к следующей клетке корабля
+                switch(dir) {
+                    case 0: curr_x++; break; // Вправо
+                    case 1: curr_y++; break; // Вниз
+                    case 2: curr_x--; break; // Влево
+                    case 3: curr_y--; break; // Вверх
+                }
             }
-            if (!can_place) break;
-            
-            // Переходим к следующей клетке корабля
-            if (dir == 0) curr_x++;
-            else curr_y++;
         }
         
         // Если можно поставить, отображаем корабль на временной карте
         if (can_place) {
-            curr_x = x;
-            curr_y = y;
+            int curr_x = x, curr_y = y;
             for (int i = 0; i < size_ship; i++) {
-                if (curr_x >= 0 && curr_x < N && curr_y >= 0 && curr_y < N) {
-                    temp_map[curr_x][curr_y] = ship_id;
+                temp_map[curr_x][curr_y] = ship_id;
+                switch(dir) {
+                    case 0: curr_x++; break;
+                    case 1: curr_y++; break;
+                    case 2: curr_x--; break;
+                    case 3: curr_y--; break;
                 }
-                if (dir == 0) curr_x++;
-                else curr_y++;
             }
         }
         
@@ -341,20 +335,23 @@ void set_manually_ships(int map[N][N], int size_ship, int ship_id) {
         // Обработка ввода
         char input = getch();
         switch (tolower(input)) {
-            case 'w': if (y > 0) y--; break;
-            case 's': if (y < N-1) y++; break;
-            case 'a': if (x > 0) x--; break;
-            case 'd': if (x < N-1) x++; break;
-            case 'r': dir = (dir + 1) % 2; break; // Меняем направление
+            case 'w': if (y > 0) y--; break;      // Вверх
+            case 's': if (y < N-1) y++; break;    // Вниз
+            case 'a': if (x > 0) x--; break;     // Влево
+            case 'd': if (x < N-1) x++; break;   // Вправо
+            case 'r': dir = (dir + 1) % 4; break; // Поворот (теперь 4 направления)
             case ' ': // Пробел - установить корабль
                 if (can_place) {
                     // Устанавливаем корабль на основную карту
-                    curr_x = x;
-                    curr_y = y;
+                    int curr_x = x, curr_y = y;
                     for (int i = 0; i < size_ship; i++) {
                         map[curr_x][curr_y] = ship_id;
-                        if (dir == 0) curr_x++;
-                        else curr_y++;
+                        switch(dir) {
+                            case 0: curr_x++; break;
+                            case 1: curr_y++; break;
+                            case 2: curr_x--; break;
+                            case 3: curr_y--; break;
+                        }
                     }
                     placed = true;
                     cout << "Корабль установлен!\n";
